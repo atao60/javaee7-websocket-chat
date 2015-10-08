@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.hascode.tutorial</groupId>
+    <artifactId>javaee7-websocket-chat</artifactId>
+    <version>1.0.0</version>
+    <packaging>war</packaging>
+
+    <name>javaee7-websocket-chat</name>
+    <description>
+    Rational: to use Wildfly  in embedded mode, in place of Glassfish.
+    Presentation:
+      Creating a Chat Application using Java EE 7, Websockets and GlassFish 4  
+      http://www.hascode.com/2013/08/creating-a-chat-application-using-java-ee-7-websockets-and-glassfish-4/
+    Code source:
+      Java EE 7 - GlassFish WebSockets Chat Tutorial  
+      https://bitbucket.org/hascode/javaee7-websocket-chat/
+    </description>
+
+    <properties>
+
+        <web.port>8084</web.port>
+        <context.path>hascode</context.path><!-- letters, digits or underscores only -->
+
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+
+        <sviperll.extension.version>0.16</sviperll.extension.version>
+
+        <!-- JVM Management -->
+
+        <!-- Java 1.8 required by Wildfly Swarm -->
+        <project.jdk.version>1.8</project.jdk.version>
+        <project.encoding>UTF-8</project.encoding>
+
+        <project.build.sourceEncoding>${project.encoding}</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${project.encoding}</project.reporting.outputEncoding>
+
+        <maven.compiler.source>${project.jdk.version}</maven.compiler.source>
+        <maven.compiler.target>${project.jdk.version}</maven.compiler.target>
+        <maven.compiler.compilerVersion>${project.jdk.version}</maven.compiler.compilerVersion>
+        <maven.compiler.fork>true</maven.compiler.fork>
+        <maven.compiler.verbose>true</maven.compiler.verbose>
+        <maven.compiler.optimize>true</maven.compiler.optimize>
+        <maven.compiler.debug>true</maven.compiler.debug>
+
+        <!-- Maven and Plugin Management -->
+        <!-- Version 3.3.1+ required for Maven Extensions -->
+        <maven.minimal.version>3.3.1</maven.minimal.version>
+
+        <replacer.plugin.version>1.5.3</replacer.plugin.version>
+        <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
+
+        <build.helper.maven.plugin.version>1.9.1</build.helper.maven.plugin.version>
+        <maven.enforcer.plugin.version>1.4.1</maven.enforcer.plugin.version>
+        <versions.maven.plugin.version>2.2</versions.maven.plugin.version>
+        <coreext.maven.plugin.version>${sviperll.extension.version}</coreext.maven.plugin.version>
+
+        <maven.compiler.plugin.version>3.3</maven.compiler.plugin.version>
+        <maven.clean.plugin.version>2.6.1</maven.clean.plugin.version>
+        <maven.resources.plugin.version>2.7</maven.resources.plugin.version>
+
+        <maven.surefire.plugin.version>2.18.1</maven.surefire.plugin.version>
+        <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
+        <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
+        <maven.war.plugin.version>2.6</maven.war.plugin.version>
+
+        <maven.install.plugin.version>2.5.2</maven.install.plugin.version>
+        <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
+        <maven.site.plugin.version>3.4</maven.site.plugin.version>
+
+        <glassfish.plugin.version>4.0</glassfish.plugin.version>
+
+        <wildfly.maven.plugin.version>1.1.0.Alpha4</wildfly.maven.plugin.version>
+        <wildfly.swarm.plugin.version>${wildfly.swarm.version}</wildfly.swarm.plugin.version>
+
+        <!-- Dependency Management -->
+        <json.api.version>1.0</json.api.version>
+        <websocket.api.version>1.1</websocket.api.version>
+        <javax.json.version>1.0.4</javax.json.version>
+
+        <glassfish.version>4.1</glassfish.version>
+
+        <wildfly.swarm.version>1.0.0.Alpha4</wildfly.swarm.version>
+
+    </properties>
+
+    <!-- just to keep versions-maven-plugin quiet (no Maven plugin projects here) -->
+    <prerequisites>
+        <maven>${maven.minimal.version}</maven>
+    </prerequisites>
+
+    <dependencies>
+    
+    <!-- 
+     <dependency>
+            <groupId>org.jboss.spec.javax.websocket</groupId>
+            <artifactId>jboss-websocket-api_1.1_spec</artifactId>
+            <version>1.1.1.Final</version>
+        </dependency>
+         -->
+        <dependency>
+            <groupId>javax.websocket</groupId>
+            <artifactId>javax.websocket-api</artifactId>
+            <version>${websocket.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.json</groupId>
+            <artifactId>javax.json-api</artifactId>
+            <version>${json.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency><!--  provisoire pour fournir à Toto les classes org.wildfly.swarm.* -->
+            <groupId>org.wildfly.swarm</groupId>
+            <artifactId>wildfly-swarm-undertow</artifactId>
+            <version>${wildfly.swarm.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+        <!-- Doesn't work under the current version (Eclipse Luna SR2) of M2E
+            <plugin>
+                <groupId>com.github.sviperll</groupId>
+                <artifactId>coreext-maven-plugin</artifactId>
+            </plugin>
+             -->
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${maven.clean.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven.resources.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven.failsafe.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven.jar.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>${maven.war.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${maven.install.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven.deploy.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${maven.site.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${build.helper.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${maven.enforcer.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${versions.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>${maven.antrun.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>replacer</artifactId>
+                    <version>${replacer.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>set-web-socket-port-in-resources</id>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>replace</goal>
+                            </goals>
+                            <configuration>
+                                <file>${project.basedir}/src/main/webapp/index.html</file>
+                                <regex>true</regex>
+                                <replacements>
+                                    <replacement>
+                                        <!-- even if replacer uses JDK Regex, here don't double the escaping counter slash -->
+                                        <token>(var\s+serviceLocation\s*=\s*"ws://0\.0\.0\.0:)(?!${web.port})\d+/(?!${context.path}/chat/").*?(/chat/")</token>
+                                        <value>$1${web.port}/${context.path}$2</value>
+                                    </replacement>
+                                </replacements>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.sviperll</groupId>
+                    <artifactId>coreext-maven-plugin</artifactId>
+                    <version>${coreext.maven.plugin.version}</version>
+                    <configuration>
+                        <extensions combine.children="append">
+                            <extension>
+                                <groupId>com.github.sviperll</groupId>
+                                <artifactId>maven-profiledep-extension</artifactId>
+                                <version>${sviperll.extension.version}</version>
+                            </extension>
+                        </extensions>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>check-coreext</id>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.wildfly.plugins</groupId>
+                    <artifactId>wildfly-maven-plugin</artifactId>
+                    <version>${wildfly.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.wildfly.swarm</groupId>
+                    <artifactId>wildfly-swarm-plugin</artifactId>
+                    <version>${wildfly.swarm.plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>wildfly</id>
+            <activation>
+                <property>
+                    <name>wildfly</name>
+                </property>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.wildfly.swarm</groupId>
+                            <artifactId>wildfly-swarm-plugin</artifactId>
+                            <configuration>
+                                <properties>
+                                    <jboss.http.port>${web.port}</jboss.http.port>
+                                    <wildfly.swarm.context.path>${context.path}</wildfly.swarm.context.path>
+                                </properties>
+                                <!-- 
+                                <properties>
+                                    <jboss.http.port>${web.port}</jboss.http.port>
+                                    <wildfly.swarm.context.path>${context.path}</wildfly.swarm.context.path>
+                                </properties>
+
+
+                                <contextPath>${context.path}</contextPath>
+                                <httpPort>${web.port}</httpPort>
+                                -->
+
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <goals>
+                                        <goal>package</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <artifactId>maven-war-plugin</artifactId>
+                            <version>${maven.war.plugin.version}</version>
+                            <configuration>
+                                <packagingExcludes>WEB-INF/lib/wildfly-swarm-*.jar</packagingExcludes>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.glassfish</groupId>
+                    <artifactId>javax.json</artifactId>
+                    <version>${javax.json.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.wildfly.swarm</groupId>
+                    <artifactId>wildfly-swarm-undertow</artifactId>
+                    <version>${wildfly.swarm.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile><!-- Embedded Wildfly: 
+            Launch the application without generating a war 
+                mvn clean wildfly-swarm:run -Pwildfly-embedded
+                
+            Note. wildfly:run requires the simple jar/war 
+                    => it creates it if needed.     
+            -->
+            <id>wildfly-embedded</id>
+            <activation>
+                <property>
+                    <name>wildfly-embedded</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>wildfly</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.wildfly.plugins</groupId>
+                        <artifactId>wildfly-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.wildfly.swarm</groupId>
+                        <artifactId>wildfly-swarm-plugin</artifactId>
+                        <configuration>
+<!-- 
+                            <httpPort>${web.port}</httpPort>
+      -->
+                            <properties>
+                                <jboss.http.port>${web.port}</jboss.http.port>
+                            </properties>
+                            <contextPath>${context.path}</contextPath>
+<!--                             
+                            <mainClass>org.wildfly.swarm.Swarm</mainClass>
+                            <mainClass>org.wildfly.swarm.bootstrap.Main</mainClass>
+                            <mainClass>com.hascode.tutorial.bootstrap.Launcher</mainClass>
+      -->
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile><!-- Standalone Wildfly
+                Create a runnable fatjar and launch it with 
+                    mvn package antrun:run -Pwildfly-standalone
+                Note. Under M2Eclipse, antrun:run must be used, as with wildfly-swarm:run 
+                      the server isn't stopped after its ending has been asked from M2Eclipse. -->
+            <id>wildfly-standalone</id>
+            <activation>
+                <property>
+                    <name>wildfly-standalone</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>wildfly</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.wildfly.swarm</groupId>
+                        <artifactId>wildfly-swarm-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <configuration>
+                            <target>
+                                <java fork="true" jar="${project.build.directory}/${project.build.finalName}-swarm.jar">
+                                    <jvmarg value="-Djboss.http.port=${web.port}" />
+                                    <jvmarg value="-Dwildfly.swarm.context.path=${context.path}" />
+                                </java>
+                            </target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile><!-- Launch directly the Swarm main class
+                    mvn compile antrun:run -launcher
+                Note. Under M2Eclipse, antrun:run must be used, as with exec:exec 
+                      the server isn't stopped after its ending has been asked from M2Eclipse. -->
+            <id>wildfly-launcher</id>
+            <activation>
+                <property>
+                    <name>wildfly-launcher</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>wildfly</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.wildfly.swarm</groupId>
+                        <artifactId>wildfly-swarm-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <configuration>
+                            <target>
+<!-- 
+                            <mainClass>org.wildfly.swarm.Swarm</mainClass>
+                            <mainClass>org.wildfly.swarm.bootstrap.Main</mainClass>
+      -->
+                                <java fork="true" classname="org.wildfly.swarm.Swarm">
+                                    <jvmarg value="-Djboss.http.port=${web.port}" />
+                                    <jvmarg value="-Dwildfly.swarm.context.path=${context.path}" />
+                                    <classpath refid="maven.compile.classpath" />
+                                </java>
+                            </target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile><!-- Embedded Glassfish -->
+            <id>glassfish-embedded</id>
+            <activation>
+                <property>
+                    <name>glassfish</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.glassfish.embedded</groupId>
+                        <artifactId>maven-embedded-glassfish-plugin</artifactId>
+                    </plugin>
+                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.glassfish.embedded</groupId>
+                            <artifactId>maven-embedded-glassfish-plugin</artifactId>
+                            <version>${glassfish.plugin.version}</version>
+                            <executions>
+                                <execution>
+                                    <goals>
+                                        <goal>deploy</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                            <configuration>
+                                <goalPrefix>embedded-glassfish</goalPrefix>
+                                <app>${project.build.directory}/${project.artifactId}-${project.version}.war</app>
+                                <autoDelete>true</autoDelete>
+                                <port>${web.port}</port>
+                                <name>${project.artifactId}</name>
+                                <contextRoot>${context.path}</contextRoot>
+                            </configuration>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.glassfish.main.common</groupId>
+                                    <artifactId>simple-glassfish-api</artifactId>
+                                    <version>${glassfish.version}</version>
+                                </dependency>
+                            </dependencies>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
+            <id>enforce</id>
+            <activation>
+                <property>
+                    <name>enforce</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>build-helper-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>get-maven-version</id>
+                                    <goals>
+                                        <goal>maven-version</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-enforcer-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>enforce-versions</id>
+                                    <goals>
+                                        <goal>enforce</goal>
+                                    </goals>
+                                    <configuration>
+                                        <fail>true</fail>
+                                        <rules>
+                                            <requireMavenVersion>
+                                                <version>${maven.minimal.version}</version>
+                                                <message><![CDATA[[ERROR] OLD MAVEN [${maven.version}] in use. 
+                                                Maven ${maven.minimal.version} or newer is required.]]>
+                                                </message>
+                                            </requireMavenVersion>
+                                            <requireJavaVersion>
+                                                <version>${project.jdk.version}</version>
+                                                <message><![CDATA[[ERROR] OLD JDK [${java.version}] in use. 
+                                                JDK ${project.jdk.version} or newer is required.]]>
+                                                </message>
+                                            </requireJavaVersion>
+                                            <requirePluginVersions>
+                                                <banLatest>true</banLatest>
+                                                <banRelease>true</banRelease>
+                                                <banSnapshots>true</banSnapshots>
+                                                <unCheckedPluginList>
+                                                    org.apache.maven.plugins:maven-site-plugin
+                                                </unCheckedPluginList>
+                                            </requirePluginVersions>
+                                            <bannedDependencies>
+                                                <searchTransitive>true</searchTransitive>
+                                                <excludes>
+                                                    <exclude>commons-logging</exclude>
+                                                    <exclude>log4j</exclude>
+                                                    <exclude>org.apache.logging.log4j</exclude>
+
+                                                    <exclude>org.slf4j:slf4j-log4j12</exclude>
+                                                    <exclude>org.slf4j:slf4j-jdk14</exclude>
+                                                </excludes>
+                                            </bannedDependencies>
+                                        </rules>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>versions-maven-plugin</artifactId>
+                            <configuration>
+                                <!-- required to avoid warning with new alpha, beta, ... versions -->
+                                <rulesUri>file://${project.basedir}/src/conf/versionrules.xml</rulesUri>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>check-versions</id>
+                                    <phase>validate</phase><!-- no default phase -->
+                                    <goals>
+                                        <goal>display-dependency-updates</goal>
+                                        <goal>display-plugin-updates</goal>
+                                        <goal>display-property-updates</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
+            <id>only-under-eclipse</id>
+            <activation>
+                <property>
+                    <name>m2e.version</name>
+                </property>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.eclipse.m2e</groupId>
+                            <artifactId>lifecycle-mapping</artifactId>
+                            <version>1.0.0</version>
+                            <configuration>
+                                <lifecycleMappingMetadata>
+                                    <pluginExecutions>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                                                <artifactId>replacer</artifactId>
+                                                <versionRange>${replacer.plugin.version}</versionRange>
+                                                <goals>
+                                                    <goal>replace</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <execute>
+                                                    <runOnIncremental>false</runOnIncremental><!-- to avoid looping -->
+                                                    <runOnConfiguration>true</runOnConfiguration>
+                                                </execute>
+                                            </action>
+                                        </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>build-helper-maven-plugin</artifactId>
+                                                <versionRange>${build.helper.maven.version}</versionRange>
+                                                <goals>
+                                                    <goal>maven-version</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>versions-maven-plugin</artifactId>
+                                                <versionRange>${versions.maven.plugin.version}</versionRange>
+                                                <goals>
+                                                    <goal>display-dependency-updates</goal>
+                                                    <goal>display-plugin-updates</goal>
+                                                    <goal>display-property-updates</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
+                                        <pluginExecution>
+                                            <pluginExecutionFilter>
+                                                <groupId>com.github.sviperll</groupId>
+                                                <artifactId>coreext-maven-plugin</artifactId>
+                                                <versionRange>${coreext.maven.plugin.version}</versionRange>
+                                                <goals>
+                                                    <goal>check</goal>
+                                                </goals>
+                                            </pluginExecutionFilter>
+                                            <action>
+                                                <ignore />
+                                            </action>
+                                        </pluginExecution>
+                                    </pluginExecutions>
+                                </lifecycleMappingMetadata>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
+</project>

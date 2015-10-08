@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset comparisonMethod="maven"
+         xmlns="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0 
+                             http://www.mojohaus.org/versions-maven-plugin/xsd/rule-2.0.0.xsd">
+    <ignoreVersions>
+       <!-- don't check if update exists for alpha versions -->
+        <ignoreVersion type="regex">.*[Aa]lpha-?\d*</ignoreVersion>
+       <!-- don't check if update exists for beta versions -->
+        <ignoreVersion type="regex">.*[Bb]eta-?\d*</ignoreVersion>
+       <!-- don't check if update exists for candidate release versions -->
+        <ignoreVersion type="regex">.*[Rr][Cc]-?\d*</ignoreVersion>
+        <ignoreVersion type="regex">.*[Cc][Rr]-?\d*</ignoreVersion>
+       <!-- don't check if update exists for milestone versions -->
+        <ignoreVersion type="regex">.*\.M\d+</ignoreVersion>
+       <!-- don't check if update exists for xmlpull:xmlpull -->
+        <ignoreVersion type="regex">1.1.3.4(a|d_b4_min)</ignoreVersion>
+    </ignoreVersions>
+</ruleset>
