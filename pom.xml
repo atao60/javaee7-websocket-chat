@@ -82,7 +82,7 @@
 
         <glassfish.version>4.1</glassfish.version>
 
-        <wildfly.swarm.version>1.0.0.Alpha4</wildfly.swarm.version>
+        <wildfly.swarm.version>1.0.0.Alpha4</wildfly.swarm.version><!-- 1.0.0.Alpha5-SNAPSHOT -->
 
     </properties>
 
@@ -112,8 +112,11 @@
             <version>${json.api.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency><!--  provisoire pour fournir à Toto les classes org.wildfly.swarm.* -->
+        <dependency>
             <groupId>org.wildfly.swarm</groupId>
+            <!--  wildfly-swarm-jaxrs doesn't work here
+            <artifactId>wildfly-swarm-jaxrs</artifactId>
+              -->
             <artifactId>wildfly-swarm-undertow</artifactId>
             <version>${wildfly.swarm.version}</version>
         </dependency>
@@ -333,6 +336,7 @@
                 <profile.depends>wildfly</profile.depends>
             </properties>
             <build>
+                <finalName>${project.artifactId}-${project.version}.${project.packaging}</finalName>
                 <plugins>
                     <plugin>
                         <groupId>org.wildfly.plugins</groupId>
@@ -349,11 +353,6 @@
                                 <jboss.http.port>${web.port}</jboss.http.port>
                             </properties>
                             <contextPath>${context.path}</contextPath>
-<!--                             
-                            <mainClass>org.wildfly.swarm.Swarm</mainClass>
-                            <mainClass>org.wildfly.swarm.bootstrap.Main</mainClass>
-                            <mainClass>com.hascode.tutorial.bootstrap.Launcher</mainClass>
-      -->
                         </configuration>
                     </plugin>
                 </plugins>
