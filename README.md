@@ -36,7 +36,13 @@ Whatever the scenario, when the server is ready, go to:
     
 Notes:
 * The port can be changed from the pom file.
-* With *Maven 3.3* or below, for the profiles using *Wildfly* server, the profile `wildfly` must be added to the build command.     
+* With *Maven 3.3* or below, for the profiles using *Wildfly* server, the profile `wildfly` must be added to the build command.  
+
+## Todo
+
+With the simple websocket application, *Wildfly-Swarm* can run it with a *Undertow* server, i.e. without the *Wildfly* server itself: the fatjar is half the size of the *Glassfish* fatjar. So:
+* create an application which requires the *Wildfly* server itself, and check then the fatjar size;
+* find out if there is a means to slim down the *Glassfish* fatjar.
     
 ## Credits
 
