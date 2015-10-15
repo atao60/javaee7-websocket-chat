@@ -41,11 +41,11 @@ Notes:
 ## Credits
 
 The sample is based on:
->>  Creating a Chat Application using Java EE 7, Websockets and GlassFish 4
->>  http://www.hascode.com/2013/08/creating-a-chat-application-using-java-ee-7-websockets-and-glassfish-4/
+>      Creating a Chat Application using Java EE 7, Websockets and GlassFish 4
+>      http://www.hascode.com/2013/08/creating-a-chat-application-using-java-ee-7-websockets-and-glassfish-4/
 
 with the code source:
->> Java EE 7 - GlassFish WebSockets Chat Tutorial  
->> https://bitbucket.org/hascode/javaee7-websocket-chat/
+>      Java EE 7 - GlassFish WebSockets Chat Tutorial  
+>      https://bitbucket.org/hascode/javaee7-websocket-chat/
 
     
