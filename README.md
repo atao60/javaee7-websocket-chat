@@ -14,7 +14,7 @@ For each one, two modes are available:
 
 ## Tools
 
-With [Wildfly Swarm](http://wildfly.org/swarm/), it's straightforward to build either of the two modes. 
+With [Wildfly Swarm](http://wildfly.org/swarm/), it's straightforward to build either of the two modes for *Wildfly*. 
 
 *Glassfish* doesn't provide any off-the-shelf means to create a runnable fatjar. *maven-embedded-glassfish-plugin* is designed just to launch the server with an existing war file, nothing else. 
 
@@ -36,16 +36,16 @@ Whatever the scenario, when the server is ready, go to:
     
 Notes:
 * The port can be changed from the pom file.
-* With *Maven 3.3* or below, for the profiles using *Wildfly* server, the profile `wildly` must be added to the build command.     
+* With *Maven 3.3* or below, for the profiles using *Wildfly* server, the profile `wildfly` must be added to the build command.     
     
 ## Credits
 
 The sample is based on:
->>      Creating a Chat Application using Java EE 7, Websockets and GlassFish 4
->>      http://www.hascode.com/2013/08/creating-a-chat-application-using-java-ee-7-websockets-and-glassfish-4/
+>>  Creating a Chat Application using Java EE 7, Websockets and GlassFish 4
+>>  http://www.hascode.com/2013/08/creating-a-chat-application-using-java-ee-7-websockets-and-glassfish-4/
 
 with the code source:
->>      Java EE 7 - GlassFish WebSockets Chat Tutorial  
->>      https://bitbucket.org/hascode/javaee7-websocket-chat/
+>> Java EE 7 - GlassFish WebSockets Chat Tutorial  
+>> https://bitbucket.org/hascode/javaee7-websocket-chat/
 
     
