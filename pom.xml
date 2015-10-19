@@ -4,14 +4,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.hascode.tutorial</groupId>
-    <artifactId>javaee7-websocket-chat</artifactId>
+    <artifactId>base-javaee7-websocket-chat</artifactId>
     <version>1.0.0</version>
-    <packaging>war</packaging>
+    <packaging>pom</packaging>
 
-    <name>javaee7-websocket-chat</name>
+    <name>JavaEE 7 Websocket Chat - Parent</name>
     <description>
     Samples of embedded server with Glassfish and Wildfly.
     </description>
+
+    <modules>
+        <module>payara-bootstrap</module>
+        <module>app</module>
+    </modules>
 
     <properties>
 
@@ -26,7 +31,6 @@
 
         <!-- JVM Management -->
 
-        <!-- Java 1.8 required by Wildfly Swarm -->
         <project.jdk.version>1.8</project.jdk.version>
         <project.encoding>UTF-8</project.encoding>
 
@@ -69,14 +73,14 @@
         <maven.install.plugin.version>2.5.2</maven.install.plugin.version>
         <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
         <maven.site.plugin.version>3.4</maven.site.plugin.version>
+        <maven.dependency.plugin.version>2.10</maven.dependency.plugin.version>
 
         <maven.embedded.glassfish.plugin.version>4.1.1</maven.embedded.glassfish.plugin.version>
 
-        <wildfly.maven.plugin.version>1.1.0.Alpha4</wildfly.maven.plugin.version>
         <wildfly.swarm.plugin.version>${wildfly.swarm.version}</wildfly.swarm.plugin.version>
 
         <!-- Dependency Management -->
-        <json.api.version>1.0</json.api.version>
+
         <websocket.api.version>1.1</websocket.api.version>
         <javax.json.version>1.0.4</javax.json.version>
 
@@ -93,23 +97,6 @@
     <prerequisites>
         <maven>${maven.minimal.version}</maven>
     </prerequisites>
-
-    <dependencies>
-        <dependency>
-            <groupId>javax.websocket</groupId>
-            <artifactId>javax.websocket-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
-        </dependency>
-
-        <dependency><!-- required here to defined the bootstrap class with Glassfish-->
-            <groupId>fish.payara.extras</groupId>
-            <artifactId>payara-micro</artifactId>
-        </dependency>
-
-    </dependencies>
 
     <dependencyManagement>
         <dependencies>
@@ -167,10 +154,6 @@
                 <artifactId>coreext-maven-plugin</artifactId>
             </plugin>
              -->
-            <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>replacer</artifactId>
-            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -280,14 +263,14 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.wildfly.plugins</groupId>
-                    <artifactId>wildfly-maven-plugin</artifactId>
-                    <version>${wildfly.maven.plugin.version}</version>
-                </plugin>
-                <plugin>
                     <groupId>org.wildfly.swarm</groupId>
                     <artifactId>wildfly-swarm-plugin</artifactId>
                     <version>${wildfly.swarm.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.glassfish.embedded</groupId>
+                    <artifactId>maven-embedded-glassfish-plugin</artifactId>
+                    <version>${maven.embedded.glassfish.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -295,341 +278,26 @@
                     <version>${maven.shade.plugin.version}</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.glassfish.embedded</groupId>
-                    <artifactId>maven-embedded-glassfish-plugin</artifactId>
-                    <version>${maven.embedded.glassfish.plugin.version}</version>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${maven.dependency.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>dep</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>tree</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
     </build>
 
+
     <profiles>
-        <profile>
-            <id>wildfly</id>
-            <activation>
-                <property>
-                    <name>wildfly</name>
-                </property>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.wildfly.swarm</groupId>
-                            <artifactId>wildfly-swarm-plugin</artifactId>
-                            <configuration>
-                                <properties>
-                                    <jboss.http.port>${web.port}</jboss.http.port>
-                                    <wildfly.swarm.context.path>${context.path}</wildfly.swarm.context.path>
-                                </properties>
-                            </configuration>
-                            <executions>
-                                <execution>
-                                    <goals>
-                                        <goal>package</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-war-plugin</artifactId>
-                            <configuration>
-                                <packagingExcludes>WEB-INF/lib/wildfly-swarm-*.jar</packagingExcludes>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-            <dependencies>
-                <dependency>
-                    <groupId>org.glassfish</groupId>
-                    <artifactId>javax.json</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.wildfly.swarm</groupId>
-                    <artifactId>wildfly-swarm-undertow</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-            </dependencies>
-        </profile>
 
-        <profile><!-- Embedded Wildfly: 
-            Launch the application 
-                mvn clean wildfly-swarm:run -Pwildfly-embedded
-                
-            Note. Even here, wildfly:run requires the simple war and the fat jar 
-                   and will create them if needed.     
-            -->
-            <id>wildfly-embedded</id>
-            <activation>
-                <property>
-                    <name>wildfly-embedded</name>
-                </property>
-            </activation>
-            <properties>
-                <profile.depends>wildfly</profile.depends>
-            </properties>
-            <build>
-                <finalName>${project.artifactId}-${project.version}.${project.packaging}</finalName>
-                <plugins>
-                    <plugin>
-                        <groupId>org.wildfly.swarm</groupId>
-                        <artifactId>wildfly-swarm-plugin</artifactId>
-                        <configuration>
-                            <properties>
-                                <jboss.http.port>${web.port}</jboss.http.port>
-                            </properties>
-                            <contextPath>${context.path}</contextPath>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile><!-- Standalone Wildfly
-                Create a runnable fatjar and launch it with 
-                    mvn package antrun:run -Pwildfly-standalone
-                Note. Under M2Eclipse, antrun:run must be used, as with wildfly-swarm:run 
-                      the server isn't stopped after its ending has been asked from M2Eclipse. -->
-            <id>wildfly-standalone</id>
-            <activation>
-                <property>
-                    <name>wildfly-standalone</name>
-                </property>
-            </activation>
-            <properties>
-                <profile.depends>wildfly</profile.depends>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.wildfly.swarm</groupId>
-                        <artifactId>wildfly-swarm-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <configuration>
-                            <target>
-                                <java fork="true" jar="${project.build.directory}/${project.build.finalName}-swarm.jar">
-                                    <jvmarg value="-Djboss.http.port=${web.port}" />
-                                    <jvmarg value="-Dwildfly.swarm.context.path=${context.path}" />
-                                </java>
-                            </target>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile><!-- Launch directly the Swarm main class
-                    mvn compile antrun:run -launcher
-                Note. Under M2Eclipse, antrun:run must be used, as with exec:exec 
-                      the server isn't stopped after its ending has been asked from M2Eclipse. -->
-            <id>wildfly-launcher</id>
-            <activation>
-                <property>
-                    <name>wildfly-launcher</name>
-                </property>
-            </activation>
-            <properties>
-                <profile.depends>wildfly</profile.depends>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.wildfly.swarm</groupId>
-                        <artifactId>wildfly-swarm-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <configuration>
-                            <target>
-                                <java fork="true" classname="org.wildfly.swarm.Swarm">
-                                    <jvmarg value="-Djboss.http.port=${web.port}" />
-                                    <jvmarg value="-Dwildfly.swarm.context.path=${context.path}" />
-                                    <classpath refid="maven.compile.classpath" />
-                                </java>
-                            </target>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile><!-- Embedded Glassfish 
-                Launch the application 
-                     mvn clean package embedded-glassfish:run -Pglassfish-embedded
-        -->
-            <id>glassfish-embedded</id>
-            <activation>
-                <property>
-                    <name>glassfish-embedded</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.glassfish.embedded</groupId>
-                        <artifactId>maven-embedded-glassfish-plugin</artifactId>
-                    </plugin>
-                </plugins>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.glassfish.embedded</groupId>
-                            <artifactId>maven-embedded-glassfish-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <goals>
-                                        <goal>deploy</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                            <configuration>
-                                <goalPrefix>embedded-glassfish</goalPrefix>
-                                <app>${project.build.directory}/${project.build.finalName}.war</app>
-                                <autoDelete>true</autoDelete>
-                                <port>${web.port}</port>
-                                <name>${project.artifactId}</name>
-                                <contextRoot>${context.path}</contextRoot>
-                            </configuration>
-                            <dependencies>
-                                <dependency>
-                                    <groupId>org.glassfish.main.common</groupId>
-                                    <artifactId>simple-glassfish-api</artifactId>
-                                </dependency>
-                            </dependencies>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-
-        <profile><!-- Standalone Glassfish, using Capsule and Payara-Micro
-                Launch the application 
-                     mvn clean package antrun:run -Pglassfish-standalone
-            -->
-            <id>glassfish-standalone</id>
-            <activation>
-                <property>
-                    <name>glassfish-standalone</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                    </plugin>
-                </plugins>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>build-helper-maven-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>set-application-main-class-path</id>
-                                    <!-- used by maven-assembly-plugin -->
-                                    <goals>
-                                        <goal>regex-property</goal>
-                                    </goals>
-                                    <configuration>
-                                        <name>application.main.class.path</name>
-                                        <value>${application.main.class}</value>
-                                        <regex>\.</regex>
-                                        <replacement>/</replacement>
-                                        <failIfNoMatch>false</failIfNoMatch>
-                                    </configuration>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-war-plugin</artifactId>
-                            <configuration>
-                                <packagingExcludes>
-                                    WEB-INF/lib/capsule-*.jar,
-                                    WEB-INF/lib/payara-micro-*.jar,
-                                    WEB-INF/classes/${application.main.class.path}.class
-                                </packagingExcludes>
-                            </configuration>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-assembly-plugin</artifactId>
-                            <configuration>
-                                <appendAssemblyId>false</appendAssemblyId>
-                                <!-- 
-                                <finalName>${project.build.finalName}-capsule</finalName>
-                                 -->
-                                <archive>
-                                    <manifest>
-                                        <mainClass>Capsule</mainClass>
-                                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                                        <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                                    </manifest>
-                                    <manifestEntries>
-                                        <Application-Class>${application.main.class}</Application-Class>
-                                        <Min-Java-Version>${project.jdk.version}</Min-Java-Version>
-                                        <JVM-Args />
-                                        <System-Properties />
-                                        <Args>${project.build.finalName}.${project.packaging} ${web.port} ${context.path}</Args>
-                                    </manifestEntries>
-                                </archive>
-                                <descriptors>
-                                    <descriptor>src/main/assembly/capsule.xml</descriptor>
-                                </descriptors>
-                            </configuration>
-                            <executions>
-                                <execution>
-                                    <id>make-assembly</id>
-                                    <phase>package</phase>
-                                    <goals>
-                                        <goal>single</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <artifactId>maven-antrun-plugin</artifactId>
-                            <configuration>
-                                <target>
-                                    <java fork="true" jar="${project.build.directory}/${project.build.finalName}.jar" />
-                                </target>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-            <dependencies>
-                <dependency>
-                    <groupId>javax.websocket</groupId>
-                    <artifactId>javax.websocket-api</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.glassfish</groupId>
-                    <artifactId>javax.json</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-                <dependency>
-                    <groupId>fish.payara.extras</groupId>
-                    <artifactId>payara-micro</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>co.paralleluniverse</groupId>
-                    <artifactId>capsule</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-
+        <!-- Only support profiles below. Real builders are in module 'app' -->
         <profile>
             <id>enforce</id>
             <activation>
@@ -820,5 +488,7 @@
                 </pluginManagement>
             </build>
         </profile>
+
     </profiles>
+
 </project>

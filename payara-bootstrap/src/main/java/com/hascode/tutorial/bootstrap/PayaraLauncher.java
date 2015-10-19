@@ -25,9 +25,9 @@ public class PayaraLauncher {
     }
     
     private PayaraLauncher doLaunch() {
-        try(InputStream is = currentClass().getClassLoader().getResourceAsStream(warFileName()))
+
+    	try(InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(warFileName()))
         {
-        	
         	PayaraMicroRuntime runtime = PayaraMicro.getInstance()
         			.setHttpPort(webPort())
         			.bootStrap();

@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hascode.tutorial</groupId>
+        <artifactId>base-javaee7-websocket-chat</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>chat-app</artifactId>
+    <packaging>war</packaging>
+
+    <name>JavaEE 7 Websocket Chat - Application</name>
+    <description>
+    Samples of embedded server with Glassfish and Wildfly.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.websocket</groupId>
+            <artifactId>javax.websocket-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>wildfly</id>
+            <activation>
+                <property>
+                    <name>wildfly</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                    </plugin>
+                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-war-plugin</artifactId>
+                            <configuration>
+                                <packagingExcludes>WEB-INF/lib/wildfly-swarm-*.jar</packagingExcludes>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.wildfly.swarm</groupId>
+                            <artifactId>wildfly-swarm-plugin</artifactId>
+                            <configuration>
+                                <properties>
+                                    <jboss.http.port>${web.port}</jboss.http.port>
+                                    <wildfly.swarm.context.path>${context.path}</wildfly.swarm.context.path>
+                                </properties>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <goals>
+                                        <goal>package</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.glassfish</groupId>
+                    <artifactId>javax.json</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.wildfly.swarm</groupId>
+                    <artifactId>wildfly-swarm-undertow</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile><!-- Embedded Wildfly: 
+                Launch the application 
+                    mvn clean wildfly-swarm:run -Pwildfly-embedded
+                Note. Under M2Eclipse, don't use this profile as with wildfly-swarm:run 
+                      the server keeps running after its shutting down has been asked from M2Eclipse.
+            -->
+            <id>wildfly-embedded</id>
+            <activation>
+                <property>
+                    <name>wildfly-embedded</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>wildfly</profile.depends>
+            </properties>
+            <build>
+                <finalName>${project.artifactId}-${project.version}.${project.packaging}</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.wildfly.swarm</groupId>
+                        <artifactId>wildfly-swarm-plugin</artifactId>
+                        <configuration>
+                            <contextPath>${context.path}</contextPath>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile><!-- Standalone Wildfly
+                Create a runnable fatjar and launch it with 
+                    mvn package antrun:run -Pwildfly-standalone
+                Note. Under M2Eclipse, antrun:run must be used, as with exec:exec
+                      the server keeps running after its shutting down has been asked from M2Eclipse. 
+            -->
+            <id>wildfly-standalone</id>
+            <activation>
+                <property>
+                    <name>wildfly-standalone</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>wildfly</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.wildfly.swarm</groupId>
+                        <artifactId>wildfly-swarm-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <configuration>
+                            <target>
+                                <java fork="true" jar="${project.build.directory}/${project.build.finalName}-swarm.jar">
+                                    <jvmarg value="-Djboss.http.port=${web.port}" />
+                                    <jvmarg value="-Dwildfly.swarm.context.path=${context.path}" />
+                                </java>
+                            </target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile><!-- Launch directly the Swarm main class
+                    mvn compile antrun:run -Pwildfly-launcher
+                Note. Under M2Eclipse, antrun:run must be used, as with exec:exec
+                      the server keeps running after its shutting down has been asked from M2Eclipse. -->
+            <id>wildfly-launcher</id>
+            <activation>
+                <property>
+                    <name>wildfly-launcher</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>wildfly</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.wildfly.swarm</groupId>
+                        <artifactId>wildfly-swarm-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <configuration>
+                            <target>
+                                <java fork="true" classname="org.wildfly.swarm.Swarm">
+                                    <jvmarg value="-Djboss.http.port=${web.port}" />
+                                    <jvmarg value="-Dwildfly.swarm.context.path=${context.path}" />
+                                    <classpath refid="maven.compile.classpath" />
+                                </java>
+                            </target>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>glassfish</id>
+            <activation>
+                <property>
+                    <name>glassfish</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>javax.websocket</groupId>
+                    <artifactId>javax.websocket-api</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.glassfish</groupId>
+                    <artifactId>javax.json</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile><!-- Embedded Glassfish 
+                Launch the application 
+                     mvn clean package embedded-glassfish:run -Pglassfish-embedded
+                -->
+            <id>glassfish-embedded</id>
+            <activation>
+                <property>
+                    <name>glassfish-embedded</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>glassfish</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.glassfish.embedded</groupId>
+                        <artifactId>maven-embedded-glassfish-plugin</artifactId>
+                    </plugin>
+                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.glassfish.embedded</groupId>
+                            <artifactId>maven-embedded-glassfish-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <goals>
+                                        <goal>deploy</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                            <configuration>
+                                <goalPrefix>embedded-glassfish</goalPrefix>
+                                <app>${project.build.directory}/${project.build.finalName}.war</app>
+                                <autoDelete>true</autoDelete>
+                                <port>${web.port}</port>
+                                <name>${project.artifactId}</name>
+                                <contextRoot>${context.path}</contextRoot>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.glassfish.main.common</groupId>
+                    <artifactId>simple-glassfish-api</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile><!-- Standalone Glassfish, using Capsule and Payara-Micro
+                Launch the application 
+                     mvn clean install antrun:run -Pglassfish-standalone
+            -->
+            <id>glassfish-standalone</id>
+            <activation>
+                <property>
+                    <name>glassfish-standalone</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>glassfish</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                    </plugin>
+                </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>build-helper-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>set-application-main-class-path</id>
+                                    <!-- used by maven-assembly-plugin -->
+                                    <goals>
+                                        <goal>regex-property</goal>
+                                    </goals>
+                                    <configuration>
+                                        <name>application.main.class.path</name>
+                                        <value>${application.main.class}</value>
+                                        <regex>\.</regex>
+                                        <replacement>/</replacement>
+                                        <failIfNoMatch>false</failIfNoMatch>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-war-plugin</artifactId>
+                            <configuration>
+                                <packagingExcludes>
+                                    WEB-INF/lib/capsule-*.jar,
+                                    WEB-INF/lib/payara-micro-*.jar,
+                                    WEB-INF/classes/${application.main.class.path}.class
+                                </packagingExcludes>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-assembly-plugin</artifactId>
+                            <configuration>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <!-- 
+                                <finalName>${project.build.finalName}-capsule</finalName>
+                                 -->
+                                <archive>
+                                    <manifest>
+                                        <mainClass>Capsule</mainClass>
+                                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                        <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                    </manifest>
+                                    <manifestEntries>
+                                        <Application-Class>${application.main.class}</Application-Class>
+                                        <Min-Java-Version>${project.jdk.version}</Min-Java-Version>
+                                        <JVM-Args />
+                                        <System-Properties />
+                                        <Args>${project.build.finalName}.${project.packaging} ${web.port}
+                                            ${context.path}</Args>
+                                    </manifestEntries>
+                                </archive>
+                                <descriptors>
+                                    <descriptor>src/main/assembly/capsule.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>make-assembly</id>
+                                    <phase>package</phase>
+                                    <goals>
+                                        <goal>single</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-antrun-plugin</artifactId>
+                            <configuration>
+                                <target>
+                                    <java fork="true" jar="${project.build.directory}/${project.build.finalName}.jar" />
+                                </target>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>payara-bootstrap</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>fish.payara.extras</groupId>
+                    <artifactId>payara-micro</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>co.paralleluniverse</groupId>
+                    <artifactId>capsule</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile><!-- Launch directly the Payara bootstrap class
+                    mvn compile antrun:run -glassfish-launcher
+                Note. Under M2Eclipse, antrun:run must be used, as with exec:exec
+                      the server keeps running after its shutting down has been asked from M2Eclipse. -->
+            <id>glassfish-launcher</id>
+            <activation>
+                <property>
+                    <name>glassfish-launcher</name>
+                </property>
+            </activation>
+            <properties>
+                <profile.depends>glassfish</profile.depends>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>clone-war-file</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/warfiledir</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}</directory>
+                                            <filtering>false</filtering>
+                                            <includes>
+                                                <include>${project.build.finalName}.${project.packaging}</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <configuration>
+                            <target>
+                                <java fork="true" classname="com.hascode.tutorial.bootstrap.PayaraLauncher">
+                                    <arg line="${project.build.finalName}.${project.packaging} ${web.port} ${context.path}" />
+                                    <classpath>
+                                        <path refid="maven.compile.classpath" />
+                                        <pathelement path="${project.build.directory}/warfiledir" />
+                                    </classpath>
+                                </java>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>payara-bootstrap</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>fish.payara.extras</groupId>
+                    <artifactId>payara-micro</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+
+    </profiles>
+
+</project>

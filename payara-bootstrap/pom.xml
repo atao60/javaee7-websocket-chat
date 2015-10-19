@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>com.hascode.tutorial</groupId>
+        <artifactId>base-javaee7-websocket-chat</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <artifactId>payara-bootstrap</artifactId>
+    <packaging>jar</packaging>
+    
+    <name>JavaEE 7 Websocket Chat - Payara Bootstrap</name>
+       
+    <dependencies>
+            <dependency>
+                <groupId>fish.payara.extras</groupId>
+                <artifactId>payara-micro</artifactId>
+                <scope>provided</scope>
+            </dependency>
+    </dependencies>
+    
+</project>
