@@ -32,7 +32,7 @@ About *wildfly-swarm-plugin*: under *M2Eclipse*, don't use the profile `wildfly-
 
 This project requires Maven 3.3.1+. When used with *Maven 3.3* or below, on the command line:  
 * with either of the profiles `glassfish-embedded` or `glassfish-standalone`, specify also the profile `glassfish`,    
-* with either of the profiles `wildfly-embedded` or `wildfly-standalone`, specify also  the profile `wildfly.  
+* with either of the profiles `wildfly-embedded` or `wildfly-standalone`, specify also  the profile `wildfly`.  
 
 ## Build and running
 
@@ -62,8 +62,6 @@ Note:
 * The port can be changed from the parent pom file.
 
 ## Todo
-
-Add a profile `payara-launcher` with antrun and Payara-Micro, i.e. without using the fatjar. 
 
 Use of *capsule-maven-plugin* with the profile `glassfish-standalone`.
 
